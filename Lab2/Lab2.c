@@ -79,10 +79,8 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-// from getgrgit manpage
-struct stat statbuf;
 struct group *grp;
-grp = getgrgid(statbuf.st_gid);
+grp = getgrgid(pwd.pw_gid);
 
 
     printf("Unix User               : %s (%u)\n", pwd.pw_name, pwd.pw_uid);
