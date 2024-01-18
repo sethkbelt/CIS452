@@ -119,7 +119,7 @@ grp = getgrgid(pwd.pw_gid);
 
     printf("Host                    : %s\n", unameSys.nodename);
     printf("System                  : %s %s\n\n", unameSys.sysname ,unameSys.release);
-        
+    free(buf);   
     exit(EXIT_SUCCESS);
 }
 
