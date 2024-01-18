@@ -88,7 +88,7 @@ int main()
 
 
     struct stat sb;
-    if (lstat("/Users/sethkbelt/EGRSummer2023/CIS452 - Operating Systems/Labs", &sb) == -1) {
+    if (lstat(pwd.pw_dir, &sb) == -1) {
         perror("lstat");
         exit(EXIT_FAILURE);
     }
