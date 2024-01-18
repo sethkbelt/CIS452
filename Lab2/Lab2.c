@@ -80,9 +80,8 @@ int main()
 
     printf("Unix User               : %s\n", pwd.pw_name);
     printf("User ID                 : %u\n", pwd.pw_uid); 
-    printf("Unix Group ID           : %u\n", pwd.pw_gid);
-
     printf("Name                    : %s\n", pwd.pw_gecos);
+    printf("Unix Group ID           : %u\n", pwd.pw_gid);
     printf("Unix Home Directory     : %s\n", pwd.pw_dir);
     printf("Login Shell             : %s\n", pwd.pw_shell);
 
