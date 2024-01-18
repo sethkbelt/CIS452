@@ -13,7 +13,8 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <unistd.h>
-
+#include <grp.h>
+#include <unistd.h>
 // #include <dirent.h>
 // #include <string.h>
 #include <sys/utsname.h>
@@ -78,10 +79,15 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    printf("Unix User               : %s\n", pwd.pw_name);
-    printf("User ID                 : %u\n", pwd.pw_uid); 
+// from getgrgit manpage
+struct stat statbuf;
+struct group *grp;
+grp = getgrgid(statbuf.st_gid);
+
+
+    printf("Unix User               : %s (%u)\n", pwd.pw_name, pwd.pw_uid);
     printf("Name                    : %s\n", pwd.pw_gecos);
-    printf("Unix Group ID           : %u\n", pwd.pw_gid);
+    printf("Unix Group              : %s (%u)\n", grp->gr_name, grp->gr_gid);
     printf("Unix Home Directory     : %s\n", pwd.pw_dir);
     printf("Login Shell             : %s\n", pwd.pw_shell);
 
@@ -106,9 +112,7 @@ int main()
         if(sb.st_mode & 1 << (i+2))
             chmod_buf[7 - i] = 'r';
     }
-    printf("Home Permission         : %s \n", chmod_buf);
-    printf("Home Permission (Octal) : %o \n", sb.st_mode);
-
+    printf("Home Permission         : %s (%o) \n", chmod_buf, sb.st_mode);
     struct utsname unameSys;
     uname(&unameSys);
 
