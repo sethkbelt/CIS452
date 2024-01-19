@@ -22,15 +22,74 @@
 #include <string.h>
 #include <errno.h>
 
+struct passwd getUnixInformation();
+void getSystemInformation();
+void getBirthdayInformation();
+
 int main()
 {
+
+    struct passwd pwd = getUnixInformation();
+
+    struct stat sb;
+    if (lstat(pwd.pw_dir, &sb) == -1)
+    {
+        perror("lstat");
+        exit(EXIT_FAILURE);
+    }
+
+    char chmod_buf[] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'};
+    if (S_ISDIR(sb.st_mode) == 1)
+        chmod_buf[0] = 'd';
+    for (int i = 0; i < sizeof(chmod_buf); i = i + 3)
+    {
+        if (sb.st_mode & 1 << i)
+            chmod_buf[9 - i] = 'x';
+        if (sb.st_mode & 1 << (i + 1))
+            chmod_buf[8 - i] = 'w';
+        if (sb.st_mode & 1 << (i + 2))
+            chmod_buf[7 - i] = 'r';
+    }
+    printf("Home Permission         : %s (%o) \n", chmod_buf, sb.st_mode);
+
+    getSystemInformation();
+    getBirthdayInformation();
+    exit(EXIT_SUCCESS);
+}
+// Use your date of birth as a reference and print your age at the current time in the following format
+// hardcoded birthday of March 20, 2001
+void getBirthdayInformation()
+{
+    struct tm birthday;
+    birthday.tm_year = 101; // tm_year, The number of years since 1900.
+    birthday.tm_mon = 2;
+    birthday.tm_mday = 20;
+
+    time_t nowEpoch = time(NULL);
+    struct tm *nowStruct = gmtime(&nowEpoch);
+    time_t t1 = mktime(nowStruct);
+    time_t t2 = mktime(&birthday);
+    time_t dt = difftime(t1, t2);
+
+    int days = dt / (60 * 60 * 24) - 1;
+    int years = days / 365.25;
+    int months = (days % 365) / 31; // Assuming a month is 30 days
+    days = days - (years * 365.25 + months * 30.437);
+
+    printf("Hardcoded that you were born on March 20, 2001. \n");
+    printf("You are %d years, %d months, and %d days old.\n", years, months, days);
+}
+
+struct passwd getUnixInformation()
+{
     // pointer to current user with system calls
+    struct passwd pwd;
     char *me;
     me = getenv("USER");
     printf("\nAbout me\n");
     printf("--------------------------------------------------\n");
 
-    struct passwd pwd;
+    // taken directly from manpage passwd example
     struct passwd *result;
     char *buf;
     long bufsize;
@@ -69,26 +128,12 @@ int main()
     printf("Unix Home Directory     : %s\n", pwd.pw_dir);
     printf("Login Shell             : %s\n", pwd.pw_shell);
 
-    struct stat sb;
-    if (lstat(pwd.pw_dir, &sb) == -1)
-    {
-        perror("lstat");
-        exit(EXIT_FAILURE);
-    }
+    free(buf);
+    return pwd;
+}
 
-    char chmod_buf[] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'};
-    if (S_ISDIR(sb.st_mode) == 1)
-        chmod_buf[0] = 'd';
-    for (int i = 0; i < sizeof(chmod_buf); i = i + 3)
-    {
-        if (sb.st_mode & 1 << i)
-            chmod_buf[9 - i] = 'x';
-        if (sb.st_mode & 1 << (i + 1))
-            chmod_buf[8 - i] = 'w';
-        if (sb.st_mode & 1 << (i + 2))
-            chmod_buf[7 - i] = 'r';
-    }
-    printf("Home Permission         : %s (%o) \n", chmod_buf, sb.st_mode);
+void getSystemInformation()
+{
     struct utsname unameSys;
     uname(&unameSys);
 
@@ -97,28 +142,4 @@ int main()
 
     printf("Host                    : %s\n", unameSys.nodename);
     printf("System                  : %s %s\n\n", unameSys.sysname, unameSys.release);
-    free(buf);
-
-    // Use your date of birth as a reference and print your age at the current time in the following format
-    // hardcoded birthday of March 20, 2001
-    struct tm birthday;
-    birthday.tm_year = 101; // tm_year, The number of years since 1900.
-    birthday.tm_mon = 2;
-    birthday.tm_mday = 20;
-
-    time_t nowEpoch = time(NULL);
-    struct tm *nowStruct = gmtime(&nowEpoch);
-    time_t t1 = mktime(nowStruct);
-    time_t t2 = mktime(&birthday);
-    time_t dt = difftime(t1, t2);
-
-    int days = dt / (60 * 60 * 24) - 1;
-    int years = days / 365.25;
-    int months = (days % 365) / 31; // Assuming a month is 30 days
-    days = days - (years * 365.25 + months * 30.437);
-
-    printf("Hardcoded that you were born on March 20, 2001. \n");
-    printf("You are %d years, %d months, and %d days old.\n", years, months, days);
-
-    exit(EXIT_SUCCESS);
 }
