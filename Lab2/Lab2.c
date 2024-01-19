@@ -22,36 +22,14 @@
 #include <string.h>
 #include <errno.h>
 
-struct passwd getUnixInformation();
+void getUnixInformation();
 void getSystemInformation();
 void getBirthdayInformation();
 
 int main()
 {
 
-    struct passwd pwd = getUnixInformation();
-
-    struct stat sb;
-    if (lstat(pwd.pw_dir, &sb) == -1)
-    {
-        perror("lstat");
-        exit(EXIT_FAILURE);
-    }
-
-    char chmod_buf[] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'};
-    if (S_ISDIR(sb.st_mode) == 1)
-        chmod_buf[0] = 'd';
-    for (int i = 0; i < sizeof(chmod_buf); i = i + 3)
-    {
-        if (sb.st_mode & 1 << i)
-            chmod_buf[9 - i] = 'x';
-        if (sb.st_mode & 1 << (i + 1))
-            chmod_buf[8 - i] = 'w';
-        if (sb.st_mode & 1 << (i + 2))
-            chmod_buf[7 - i] = 'r';
-    }
-    printf("Home Permission         : %s (%o) \n", chmod_buf, sb.st_mode);
-
+    getUnixInformation();
     getSystemInformation();
     getBirthdayInformation();
     exit(EXIT_SUCCESS);
@@ -80,7 +58,7 @@ void getBirthdayInformation()
     printf("You are %d years, %d months, and %d days old.\n", years, months, days);
 }
 
-struct passwd getUnixInformation()
+void getUnixInformation()
 {
     // pointer to current user with system calls
     struct passwd pwd;
@@ -127,9 +105,29 @@ struct passwd getUnixInformation()
     printf("Unix Group              : %s (%u)\n", grp->gr_name, grp->gr_gid);
     printf("Unix Home Directory     : %s\n", pwd.pw_dir);
     printf("Login Shell             : %s\n", pwd.pw_shell);
+    
+    struct stat sb;
+    if (lstat(pwd.pw_dir, &sb) == -1)
+    {
+        perror("lstat");
+        exit(EXIT_FAILURE);
+    }
 
-    free(buf);
-    return pwd;
+    char chmod_buf[100] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'};
+    if (S_ISDIR(sb.st_mode) == 1)
+        chmod_buf[0] = 'd';
+    for (int i = 0; i < 10; i = i + 3)
+    {
+        if (sb.st_mode & 1 << i)
+            chmod_buf[9 - i] = 'x';
+        if (sb.st_mode & 1 << (i + 1))
+            chmod_buf[8 - i] = 'w';
+        if (sb.st_mode & 1 << (i + 2))
+            chmod_buf[7 - i] = 'r';
+    }
+    printf("Home Permission         : %s (%o) \n", chmod_buf, sb.st_mode);
+
+   free(buf);
 }
 
 void getSystemInformation()
