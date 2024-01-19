@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <grp.h>
 #include <unistd.h>
+#include <time.h>
 // #include <dirent.h>
 // #include <string.h>
 #include <sys/utsname.h>
@@ -97,7 +98,6 @@ grp = getgrgid(pwd.pw_gid);
     }
 
 
-    //https://stackoverflow.com/questions/10323060/printing-file-permissions-like-ls-l-using-stat2-in-c
     char chmod_buf[] = {'-','-','-','-','-','-','-','-','-'};
     if(S_ISDIR(sb.st_mode) == 1)
         chmod_buf[0] = 'd';
@@ -120,14 +120,46 @@ grp = getgrgid(pwd.pw_gid);
     printf("Host                    : %s\n", unameSys.nodename);
     printf("System                  : %s %s\n\n", unameSys.sysname ,unameSys.release);
     free(buf);   
+ 
+ //Use your date of birth as a reference and print your age at the current time in the following format   
+// hardcoded birthday of March 20, 2001
+    struct tm birthday;
+    char time_buffer[80];
+
+    birthday.tm_year = 101; // tm_year, The number of years since 1900.
+    birthday.tm_mon = 2;
+    birthday.tm_mday = 20; 
+    
+    strftime(time_buffer, sizeof(time_buffer), "%D", &birthday);
+    printf("Time buffer is %s", time_buffer);
+    
+    strftime(time_buffer, sizeof(time_buffer), "%s", &birthday);
+    printf("Time buffer is %s", time_buffer);
+
+
+    int x = time(NULL);
+    printf(" \n%d", x); 
+
+    int buffer_int = atoi(time_buffer);
+    //int year_old = (x - buffer_int) / 60/60/24/365.24;
+    // int month_old = 60/60/24
+    // int day_old =  60/60;
+
+    int year_old = difftime(x, buffer_int) / 60/60/24/365.24;
+    double year_old_double = difftime(x, buffer_int) / 60/60/24/365.24;
+    int month_old = 
+    int day_old = difftime(x, buffer_int) / 60 / 60 / 24 / 7;
+
+//   struct tm tm = *gmtime(&seconds);
+//   printf("%4d-%02d-%02d %02d:%02d:%02d.%03lu\n",
+//       tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
+//       tm.tm_hour, tm.tm_min, tm.tm_sec,
+//       fraction/10000);
+
+    printf(" \n%d", year_old); 
+    printf(" \n%d", month_old); 
+    printf(" \n%d", day_old); 
+
     exit(EXIT_SUCCESS);
 }
 
-
-
-/****************void traverse_print(struct node* node)*********************
- *  brief : Travserse and print tree
- *  param : node node
- *  return: N/A
- ***************************************************************************/
-// void traverse_print(node *node)
