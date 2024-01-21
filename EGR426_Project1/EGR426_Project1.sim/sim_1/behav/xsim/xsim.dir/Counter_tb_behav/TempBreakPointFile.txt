@@ -1,0 +1,2 @@
+Breakpoint File Version 1.0
+45,true,"/home/sethkonynenbelt/EGR/EGR426_Project1/EGR426_Project1.srcs/sim_1/new/Counter_tb.vhd"
