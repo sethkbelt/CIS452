@@ -101,9 +101,8 @@ void getUnixInformation()
     }
 
     // custom chmod octal to display converter
-    const int array_size = 100; // big enough for no leak
-    int chmod_size = 10; // sufficient to dislay characters
-    char chmod_buf[array_size] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'};
+    const int chmod_size = 10; // sufficient to dislay characters
+    char chmod_buf[100] = {'-', '-', '-', '-', '-', '-', '-', '-', '-'}; // large enough to not blow stack
     // deciding if input is a directory
     if (S_ISDIR(sb.st_mode) == 1)
         chmod_buf[0] = 'd';
