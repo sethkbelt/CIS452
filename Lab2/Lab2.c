@@ -150,18 +150,19 @@ void getSystemInformation()
 void getBirthdayInformation()
 {
     // hardcoding March 20, 2001 birthday
-    struct tm birthday;
-    birthday.tm_year = 101; // tm_year, The number of years since 1900.
-    birthday.tm_mon = 2; //0-11 format
-    birthday.tm_mday = 20;
+    struct tm *birthday = malloc(sizeof(struct tm));
+    memset(birthday, 0, sizeof(struct tm));
+    birthday->tm_year = 101; // tm_year, The number of years since 1900.
+    birthday->tm_mon = 2; //0-11 format
+    birthday->tm_mday = 20;
 
     // capturing the current time
     time_t nowEpoch = time(NULL);
-    struct tm *nowStruct = NULL;
-    nowStruct = malloc(sizeof(struct tm));
+    struct tm *nowStruct = malloc(sizeof(struct tm));
     gmtime_r(&nowEpoch, nowStruct);
     time_t t1 = mktime(nowStruct);
-    time_t t2 = mktime(&birthday);
+    time_t t2 = mktime(birthday);
+   // int t2 = 9;
     time_t dt = difftime(t1, t2);
 
     // math necessary to convert seconds into days, months, years
@@ -172,4 +173,8 @@ void getBirthdayInformation()
 
     printf("Hardcoded that you were born on March 20, 2001. \n");
     printf("You are %d years, %d months, and %d days old.\n", years, months, days);
+   
+    // free malloc'd memory
+    free(birthday);
+    free(nowStruct);
 }
