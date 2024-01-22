@@ -29,7 +29,6 @@ void getBirthdayInformation();
 
 int main()
 {
-
     getUnixInformation();
     getSystemInformation();
     getBirthdayInformation();
@@ -48,7 +47,7 @@ void getUnixInformation()
     struct passwd pwd;
     char *me;
     me = getenv("USER");
-    printf("\nAbout me\n");
+    printf("\nAbout me (%s)\n", me);
     printf("--------------------------------------------------\n");
 
     // taken directly from manpage passwd example
