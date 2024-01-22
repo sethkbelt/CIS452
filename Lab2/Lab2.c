@@ -157,7 +157,9 @@ void getBirthdayInformation()
 
     // capturing the current time
     time_t nowEpoch = time(NULL);
-    struct tm *nowStruct = gmtime(&nowEpoch);
+    struct tm *nowStruct = NULL;
+    nowStruct = malloc(sizeof(struct tm));
+    gmtime_r(&nowEpoch, nowStruct);
     time_t t1 = mktime(nowStruct);
     time_t t2 = mktime(&birthday);
     time_t dt = difftime(t1, t2);
