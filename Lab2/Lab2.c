@@ -150,19 +150,18 @@ void getSystemInformation()
 void getBirthdayInformation()
 {
     // hardcoding March 20, 2001 birthday
-    struct tm *birthday = malloc(sizeof(struct tm));
-
-    birthday->tm_year = 101; // tm_year, The number of years since 1900.
-    birthday->tm_mon = 2; //0-11 format
-    birthday->tm_mday = 20;
+    struct tm birthday;
+    birthday.tm_year = 101; // tm_year, The number of years since 1900.
+    birthday.tm_mon = 2; //0-11 format
+    birthday.tm_mday = 20;
 
     // capturing the current time
     time_t nowEpoch = time(NULL);
-    struct tm *nowStruct = malloc(sizeof(struct tm));
+    struct tm *nowStruct = NULL;
     nowStruct = malloc(sizeof(struct tm));
     gmtime_r(&nowEpoch, nowStruct);
     time_t t1 = mktime(nowStruct);
-    time_t t2 = mktime(birthday);
+    time_t t2 = mktime(&birthday);
     time_t dt = difftime(t1, t2);
 
     // math necessary to convert seconds into days, months, years
