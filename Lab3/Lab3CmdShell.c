@@ -16,21 +16,31 @@
 #include <limits.h>
 
 #define MYLIMIT 256
+void add_command_to_history(const char *command);
+void print_history();
+static const char *history[MYLIMIT];
+static unsigned int history_count;
 
 int main(int argc, char *argv[])
 {
+    history_count = 0;
     // user and system information for cmd line
     struct utsname unameSys;
     char *me;
+    int unkown_commands = 0;
+
     // string tokenization
-    char *tok;
+    // https://stackoverflow.com/questions/46105827/getrusage-on-child-process
+    struct timeval child1_utime, childold_utime;
+  char cwd[MYLIMIT];
 
     while (1)
     {
         // prompt user for command
         uname(&unameSys);
         me = getenv("USER");
-        printf("%s@%s %s %% ", me, unameSys.nodename, getenv("PWD"));
+        // printf("%s ", getcwd(cwd,MYLIMIT));
+        printf("%s@%s %s ", me, unameSys.nodename, getcwd(cwd,MYLIMIT));
 
         // https://stackoverflow.com/questions/3919009/how-to-read-from-stdin-with-fgets
         char *line;
@@ -41,18 +51,23 @@ int main(int argc, char *argv[])
 
         while (*(fgets(line, line_max + 1, stdin)) != '\n')
         {
-            printf("44 %s\n", line);
+            printf("%lu", strlen(line));
+            if(strlen(line) == 2)
+            {
+                printf("bad\n");
+                exit(101);
+            }
             // when '\n' is hit, which is enter, then return
             if (line[strlen(line) - 1] == '\n')
             {
                 line[strlen(line) - 1] = '\0';
-            printf("49 %s\n", line);
 
                 // if quit exit immediately, else break the loop
                 if (strcmp(line, "quit") == 0)
                 {
                     free(line);
-                    exit(0);
+                    printf("\nUser Quit\nYou had %d unkown commands\n", unkown_commands);
+                    exit(101);
                 }
                 else
                 {
@@ -60,10 +75,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        if(strcmp(line, "\n") == 0)
+            line = "N/A";
+            // exit(0);
 
         char *tok = strtok(line, " \n");
 
-        // printf("Using strtok() on |%s|\n", line);
         // On the initial call to strtok(), its first arg is the input string
         // the delimiter is a SPACE or a NEWLINE
         char *command_tok[LINE_MAX];
@@ -72,57 +89,77 @@ int main(int argc, char *argv[])
         {
             command_tok[i++] = tok;
             tok = strtok(NULL, " \n");
-            printf("command: %s\n", command_tok[i]);
         }
         command_tok[i] = NULL;
 
-        if(execvp(command_tok[0], command_tok) < 0)
-            printf("Error executing command");
-        // while (tok != NULL)
-        // {
-        //     printf("[%s]\n", tok);
-        //     // On subsequent calls to strtok(), its first arg is NULL
-        //     tok = strtok(NULL, " \n");
-        // }
+        pid_t pid, child;
+        int status;
+        if ((pid = fork()) < 0)
+        {
+            perror("fork failure");
+            exit(1);
+        }
 
-        // pid_t pid, child;
-        // int status;
-        // if ((pid = fork()) < 0)
-        // {
-        //     perror("fork failure");
-        //     exit(1);
-        // }
-        // else if (pid == 0)
-        // {
-        //     printf("\nForked\n");
-        //     // char *run_args[] = {tok, /*"-l", "-a",*/ NULL};
-        //     char *command_tok[MYLIMIT];
-        //     command_tok[0] = NULL;
-        //     execvp(command_tok[0], command_tok);
-        //     execvp(NULL, tok);
-        //     // exec(line);
-        //     exit(101);
-        // }
-        // else
-        // {
-        //     child = wait(&status);
-        //     printf("\nChild PID %ld terminated with return status %d\n", (long)child, WEXITSTATUS(status));
-        // }
-        //       (b) the parent calls wait() to retrieve the child status
+        else if (pid == 0)
+        {
+            if (execvp(command_tok[0], command_tok) < 0)
+                exit(101);
+        }
 
-        //free(tok);
+        else
+        {
+            int ret_child;
+            struct rusage usage;
+            struct rusage usage_old;
 
-        printf("\nexit\n");
-        return 0;
+            int who_child = RUSAGE_CHILDREN;
+
+            ret_child = getrusage(who_child, &usage_old);
+            child = wait(&status);
+            add_command_to_history(*command_tok);
+            ret_child = getrusage(who_child, &usage);
+            child1_utime = usage.ru_utime;
+            childold_utime = usage_old.ru_utime;
+            long long user_time = child1_utime.tv_usec - childold_utime.tv_usec;
+            printf("\n\nTime:  %lld microseconds\n", user_time);
+            printf("Involuntary Switches:  %ld\n", usage.ru_nivcsw - usage_old.ru_nivcsw);
+
+            if (WEXITSTATUS(status) == 101)
+                unkown_commands = unkown_commands + 1;
+            if(strcmp(*command_tok, "history") == 0)
+                print_history();
+            if(strcmp(command_tok[0], "cd") == 0)
+            {
+                chdir(command_tok[1]);
+            }
+        }
     }
+    return 0;
 }
 
-// Properly handle error condition when the user enters an unknown command
+// https://stackoverflow.com/questions/5050479/history-implementation-in-a-simple-shell-program-in-c
+void add_command_to_history(const char *command)
+{
+    if (history_count < MYLIMIT)
+    {
+        history[history_count] = strdup(command);
+    }
+    else
+    {
+        // free( history[0] );
+        for (unsigned index = 1; index < MYLIMIT; index++)
+        {
+            history[index - 1] = history[index];
+        }
+        history[MYLIMIT - 1] = strdup(command);
+    }
+    history_count = history_count + 1;
+}
 
-// Find and use the appropriate system call to collect resource usage statistics about each executed process. Hint: use man -k usage to find the appropriate system call.
-
-// output the "user CPU time used" for each individual child process spawned by the shell
-
-// output the number of "involuntary context switches" experienced by each individual child process spawned by the shell
-
-// repeat until the user advises to "quit"
+void print_history()
+{
+    for (unsigned index = 0; index < history_count; index++)
+    {
+        printf("%d : %s\n", index, history[index]);
+    }
+}
