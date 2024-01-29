@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 #include <limits.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
 
 #define LINEMAX 256
 void add_command_to_history(const char *command);
@@ -132,12 +134,11 @@ void get_command(char *input_line)
 void create_forked_command(char *input_line)
 {
     // child usage statstics
-    int child_usage;
     struct rusage usage;
     struct rusage usage_old;
     int who_child = RUSAGE_CHILDREN;
     struct timeval child_time, child_time_saved;
-    pid_t pid, child;
+    pid_t pid;
 
     // if input is empty
     if (strcmp(input_line, "\n") == 0)
@@ -173,14 +174,14 @@ void create_forked_command(char *input_line)
     else
     {
         // get old child usage (getrusage gets all children)
-        child_usage = getrusage(who_child, &usage_old);
-        child = wait(&status);
+        getrusage(who_child, &usage_old);
+        wait(&status);
         
         // add command to history
         add_command_to_history(*tokenized_command);
 
         // get new child usage stats
-        child_usage = getrusage(who_child, &usage);
+        getrusage(who_child, &usage);
         child_time = usage.ru_utime;
         child_time_saved = usage_old.ru_utime;
         long long user_time = child_time.tv_usec - child_time_saved.tv_usec;
