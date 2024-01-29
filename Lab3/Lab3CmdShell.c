@@ -93,7 +93,7 @@ void print_history()
     }
 }
 
-/************* add_command_to_history(const char *command)******************
+/****************** get_command(char *input_line) **************************
  *  brief : Add command to a global array history of commands
  *  param : const char *command, the command to be added
  *  return: N/A
