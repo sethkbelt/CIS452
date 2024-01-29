@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         printf("%s@%s %s %% ", me, unameSys.nodename, getcwd(cwd, LINEMAX));
 
         // LINEMAX + 1 leaves room for the null byte added by fgets()
-        char *input_line = malloc(LINEMAX + 1);
+        char input_line[LINEMAX];
         get_command(input_line);
 
         // create forked process
@@ -114,7 +114,7 @@ void get_command(char *input_line)
             // if quit exit immediately, else break the loop
             if (strcmp(input_line, "quit") == 0)
             {
-                free(input_line);
+            //    / free(input_line);
                 printf("\nUser Quit\nYou had %d unknown commands\n", unkown_commands);
                 exit(101);
             }
