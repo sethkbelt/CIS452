@@ -17,12 +17,16 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
+/* Pre-define Macros */
 #define LINEMAX 256
+
+/* Function Declarations */
 void add_command_to_history(const char *command);
 void print_history();
 void get_command(char *input_line);
 void create_forked_command(char *input_line);
 
+/* Global Variables */
 static const char *history[LINEMAX];
 static unsigned int history_count = 0;
 int unkown_commands = 0;
@@ -43,7 +47,7 @@ int main(int argc, char *argv[])
         me = getenv("USER");
         printf("%s@%s %s %% ", me, unameSys.nodename, getcwd(cwd, LINEMAX));
 
-        // LINEMAX + 1 leaves room for the null byte added by fgets()
+        // get command from stdin
         char input_line[LINEMAX];
         get_command(input_line);
 
@@ -69,7 +73,6 @@ void add_command_to_history(const char *command)
     }
     else
     {
-        // free( history[0] );
         // go through array to add to history
         for (unsigned index = 1; index < LINEMAX; index++)
         {
@@ -97,8 +100,6 @@ void print_history()
  *  brief : Add command to a global array history of commands
  *  param : const char *command, the command to be added
  *  return: N/A
- *  Note:  Help with this function from
- * https://stackoverflow.com/questions/5050479/history-implementation-in-a-simple-shell-program-in-c
  ***************************************************************************/
 void get_command(char *input_line)
 {
@@ -114,7 +115,6 @@ void get_command(char *input_line)
             // if quit exit immediately, else break the loop
             if (strcmp(input_line, "quit") == 0)
             {
-            //    / free(input_line);
                 printf("\nUser Quit\nYou had %d unknown commands\n", unkown_commands);
                 exit(101);
             }
@@ -144,6 +144,7 @@ void create_forked_command(char *input_line)
     if (strcmp(input_line, "\n") == 0)
         input_line = "N/A";
 
+    // tokenize the string by spaces or \n
     char *tok = strtok(input_line, " \n");
 
     // first strtok has delimiter space or newline
