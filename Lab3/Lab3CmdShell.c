@@ -186,8 +186,8 @@ void create_forked_command(char *input_line)
         child_time = usage.ru_utime;
         child_time_saved = usage_old.ru_utime;
         long long user_time = child_time.tv_usec - child_time_saved.tv_usec;
-        
-        printf("\n\nTime:  %lld microseconds\n", user_time);
+        long long user_time_s = child_time.tv_sec - child_time_saved.tv_sec;
+        printf("\n\nTime:  %lld seconds %lld microseconds\n", user_time_s, user_time);
         printf("Involuntary Switches:  %ld\n", usage.ru_nivcsw - usage_old.ru_nivcsw);
 
         // if unkown command, add to history
