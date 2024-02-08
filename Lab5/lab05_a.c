@@ -22,6 +22,8 @@ int main()
         fprintf(stderr, "Thread create error %d: %s\n", status, strerror(status));
         exit(1);
     }
+   //   pthread_join(thread1, NULL);
+    sleep(5);
     return 0;
 }
 
