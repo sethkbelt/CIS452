@@ -23,7 +23,10 @@ struct shared_data {
 };
 
 int main (int argc, char *argv[]) {
-    int which_reader = (int)argv[1];
+    printf("arc %d\n", argc);
+    printf("argv: %s\n", argv[1]);
+    int which_reader = atoi(argv[1]);
+    printf("which_reader %d\n", which_reader);
     struct shared_data *data;
     int shmId;
    // char *shmPtr;
@@ -47,21 +50,20 @@ int main (int argc, char *argv[]) {
     }
 
     // reading the data from the shared memory region
-    while(1) {
-        if(data->read_flag1 == 0)
-        {
-            if(which_reader == 1)
+    while(1) 
+    {
+        if(data->read_flag1 == 0 && which_reader == 1)
             {
-                printf("data: %s r1 : %d r2 : %d\n", data->user_string, data->read_flag1, data->read_flag1);
+                printf("%s", data->user_string);
                 data->read_flag1 = 1;
             }
-            if(which_reader == 2)
+            if(data->read_flag2 == 0 && which_reader == 2)
             {
-                printf("data: %s r1 : %d r2 : %d\n", data->user_string, data->read_flag1, data->read_flag1);
+                printf("%s", data->user_string);
                 data->read_flag2 = 1;
             }
         }
-    }
+    
 
     // print where memory is and how many bytes you put in
     printf ("value a: %lu\t value b: %lu\n", (unsigned long) data,
