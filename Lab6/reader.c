@@ -18,6 +18,7 @@
 struct shared_data {
     int read_flag1;
     int read_flag2;
+    int quit_flag;
     char user_string[4096];
     // todo maybe add a quit flag
 };
@@ -50,7 +51,7 @@ int main (int argc, char *argv[]) {
     }
 
     // reading the data from the shared memory region
-    while(1) 
+    while(data->quit_flag == 0) 
     {
         if(data->read_flag1 == 0 && which_reader == 1)
             {
@@ -65,20 +66,17 @@ int main (int argc, char *argv[]) {
         }
     
 
-    // print where memory is and how many bytes you put in
-    printf ("value a: %lu\t value b: %lu\n", (unsigned long) data,
-            (unsigned long) data + FOO);
-
     // detaches from the shared memory region
     if (shmdt (data) < 0) {
         perror ("just can't let go\n");
         exit (1);
     }
 
-    if (shmctl (shmId, IPC_RMID, 0) < 0) {
-        perror ("can't deallocate\n");
-        exit (1);
-    }
+    // // deallocates
+    // if (shmctl (shmId, IPC_RMID, 0) < 0) {
+    //     perror ("can't deallocate\n");
+    //     exit (1);
+    // }
 
     return 0;
 }

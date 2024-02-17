@@ -18,6 +18,7 @@
 struct shared_data {
     int read_flag1;
     int read_flag2;
+    int quit_flag;
     char user_string[4096];
     // todo maybe add a quit flag
 };
@@ -49,6 +50,8 @@ int main () {
     //         (unsigned long) data + FOO);
     data->read_flag1 = 1;
     data->read_flag2 = 1;
+    data->quit_flag = 0;
+
     // copying the data into the shared memory region
     while(strcmp(data->user_string, "quit\n") != 0) {
         if(data->read_flag1 == 1 && data->read_flag2 ==1){
@@ -57,6 +60,7 @@ int main () {
         data->read_flag2 = 0;
         }
     }
+    data->quit_flag = 1;
 
     // print where memory is and how many bytes you put in
     printf ("value a: %lu\t value b: %lu\n", (unsigned long) data,
