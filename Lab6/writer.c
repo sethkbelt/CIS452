@@ -4,6 +4,8 @@
  * Created: February 16, 2024
  * Description: This code exists as a writer to shared memory.
  ***************************************************************************/
+
+/* File include libraries */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -13,8 +15,10 @@
 #include <unistd.h>
 #include <string.h>
 
+/* Pre-defined Macros */
 #define FOO 4096
 
+/* Structue defintions */
 struct shared_data {
     int read_flag1;
     int read_flag2;
@@ -45,9 +49,6 @@ int main () {
         perror ("Cannot attach to shared memory region\n");
         exit (1);
     }
-    //     // print where memory is and how many bytes you put in
-    // printf ("value a: %lu\t value b: %lu\n", (unsigned long) data,
-    //         (unsigned long) data + FOO);
     data->read_flag1 = 1;
     data->read_flag2 = 1;
     data->quit_flag = 0;
@@ -72,6 +73,7 @@ int main () {
         exit (1);
     }
 
+    // detach from the shared memory region
     if (shmctl (shmId, IPC_RMID, 0) < 0) {
         perror ("can't deallocate\n");
         exit (1);

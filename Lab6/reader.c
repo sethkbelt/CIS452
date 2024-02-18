@@ -4,6 +4,8 @@
  * Created: February 16, 2024
  * Description: This code exists as a reader to shared memory.
  ***************************************************************************/
+
+/* File include libraries */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -13,24 +15,24 @@
 #include <unistd.h>
 #include <string.h>
 
+/* Pre-defined macros */
 #define FOO 4096
 
+/* Structue defintions */
 struct shared_data {
     int read_flag1;
     int read_flag2;
     int quit_flag;
     char user_string[4096];
-    // todo maybe add a quit flag
 };
 
 int main (int argc, char *argv[]) {
-    printf("arc %d\n", argc);
-    printf("argv: %s\n", argv[1]);
+    
+    // decide which reader you are
     int which_reader = atoi(argv[1]);
-    printf("which_reader %d\n", which_reader);
+    
     struct shared_data *data;
     int shmId;
-   // char *shmPtr;
 
     // generate key to the shared memory
     key_t my_key = ftok("example.c", 12345);
@@ -72,11 +74,6 @@ int main (int argc, char *argv[]) {
         exit (1);
     }
 
-    // // deallocates
-    // if (shmctl (shmId, IPC_RMID, 0) < 0) {
-    //     perror ("can't deallocate\n");
-    //     exit (1);
-    // }
-
+    // server detaches from the memory
     return 0;
 }
