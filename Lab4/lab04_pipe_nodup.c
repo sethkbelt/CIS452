@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <sys/wait.h>
 
-#define READ 0
+#define fREAD 0
 #define WRITE 1
 #define MAX 1024
 
