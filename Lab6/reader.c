@@ -56,23 +56,22 @@ int main (int argc, char *argv[]) {
     // reading the data from the shared memory region
     while(data->quit_flag == 0) 
     {
+        // blocking statement
         while(data->write_finish_flag == 1);
         if(which_reader == 1)
+        // making sure to not write to data the reader may write to
             {
-                // I know I can only enter this with one reader
-                // so it's a viable solution
+                // which_reader flag decides which flag is set
                 printf("%s", data->user_string);
                 data->read_flag1 = 1;
             }
             if(which_reader == 2)
             {
-                // I know I can only enter this with one reader
-                // so it's okay
+                // which_reader flag decides which flag is set
                 printf("%s", data->user_string);
                 data->read_flag2 = 1;
             }
         }
-    
 
     // detaches from the shared memory region
     if (shmdt (data) < 0) {

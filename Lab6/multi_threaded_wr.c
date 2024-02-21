@@ -73,19 +73,16 @@ int main()
     return 0;
 }
 
-/************* create_forked_command(const char *command)******************
- *  brief : Create a forked process with the given command, execute it
- *  param : const char *input_line, the command to be added
- *  return: N/A
- *
- * //arguments:arg is an untyped pointer pointing to a character
-// returns:a pointer to NULL
-// side effects:prints a greeting
+/******************** *reader_function(void *data2) ************************
+ *  brief : Reader thread to read shared data
+ *  param : data2 - shared data
+ *  return: NULL
  ***************************************************************************/
 void *reader_function(void *arg)
 {
     while (quit_flag != 0)
     {
+        // thread will switch contexts automatically
         if (flag[0] == 1)
         {
             printf("Reader: %s", val);
@@ -95,6 +92,11 @@ void *reader_function(void *arg)
     return NULL;
 }
 
+/******************** *writer_function(void *arg) ************************
+ *  brief : Writer thread to write shared data
+ *  param : arg - shared data
+ *  return: NULL
+ ***************************************************************************/
 void *writer_function(void *arg)
 {
     while (quit_flag != 0)

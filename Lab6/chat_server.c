@@ -1,15 +1,13 @@
-/*uthor: Seth Konynenbelt
-
- * Created: February 16, 2024
-
- * Description: This code exists as a writer and reader to shared memory
-
- *              using threading
-
+/****************************************************************************
+ * Title: chat_server.c
+ * Author: Seth Konynenbelt
+ * Created: February 1, 2024
+ * Description: This file is a chat server with multithreaded processing,
+ * in where we aren't allowed to use semaphores or algorthms for
+ * concurrency. One can launch N number of chat servers
  ***************************************************************************/
 
 /* File include libraries */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -41,10 +39,6 @@ void *reader_function(void *arg);
 
 int main(int argc, char *argv[])
 {
-    // decide which reader you are
-
-    // int which_reader = atoi(argv[1]);
-
     struct shared_data *data;
     int shmId;
     // generate key to the shared memory
@@ -54,6 +48,7 @@ int main(int argc, char *argv[])
     int status;
 
     // shmget creates new shared memory and allows user to write to it
+    // if you aren't the first one creating then no "create" macro
     if (argv[1] == 0)
     {
         if ((shmId =
@@ -63,7 +58,6 @@ int main(int argc, char *argv[])
             perror("shmget failed to get memory\n");
             exit(1);
         }
-                printf("shm id %d and  creating\n", shmId);
     }
     else
     {
@@ -74,8 +68,8 @@ int main(int argc, char *argv[])
             perror("shmget failed to get memory\n");
             exit(1);
         }
-        printf("shm id %d and not creating\n", shmId);
     }
+
     // attaches the specified shared memory region
     // data is the address of the shared memory region
     if ((data = shmat(shmId, NULL, 0)) == (void *)-1)
@@ -83,13 +77,12 @@ int main(int argc, char *argv[])
         perror("Cannot attach to shared memory region\n");
         exit(1);
     }
-    
-    printf("Data address after shmat : %p\n", (void *)data);
+
     data->quit_flag = 0;
     data->write_finish_flag = 1;
     data->read_flag1 = 1;
 
-    // create and start two threads executing the "do_greeting3" function
+    // create and start two threads executing the writer/reader function
     // pass each thread a pointer to its respective argument
     if ((status = pthread_create(&thread1, NULL, writer_function, data)) != 0)
     {
@@ -102,9 +95,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
         exit(101);
     }
-    data->quit_flag = 0;
 
-    printf("thread create up\n");
     // join with the threads(wait for them to terminate
     //  get their return vals
     if ((status = pthread_join(thread1, &result1)) != 0)
@@ -120,7 +111,6 @@ int main(int argc, char *argv[])
         exit(101);
     }
 
-    printf("thread joined up and left");
     // detaches from the shared memory region
     if (shmdt(data) < 0)
     {
@@ -130,42 +120,46 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+/******************** *reader_function(void *data2) ************************
+ *  brief : Reader thread to read shared data
+ *  param : data2 - shared data
+ *  return: NULL
+ ***************************************************************************/
 void *reader_function(void *data2)
 {
     struct shared_data *data = (struct shared_data *)data2;
     data->quit_flag = 0;
     data->write_finish_flag = 1;
     data->read_flag1 = 1;
-    printf("address of data: %p\n", (void *) data);
 
     // reading the data from the shared memory region
     while (data->quit_flag == 0)
     {
         while (data->write_finish_flag == 1);
-        // I know I can only enter this with one reader
-        // so it's a viable solution
-        printf("Reader: %s ", data->user_string);
+        printf("Reply : %s", data->user_string);
         data->read_flag1 = 1;
     }
     return NULL;
 }
+
+/******************** *writer_function(void *data1) ************************
+ *  brief : Writer thread to write shared data
+ *  param : data1 - shared data
+ *  return: NULL
+ ***************************************************************************/
 void *writer_function(void *data1)
 {
-    printf("writer \n");
     struct shared_data *data = (struct shared_data *)data1;
-    printf("address of data: %p\n", (void *)data);
-    // Set stdin to non-blocking mode
+
     // copying the data into the shared memory region
     while (strcmp(data->user_string, "quit\n") != 0)
     {
         if (data->read_flag1 == 1)
         {
-            printf("In Writer : ");
             data->write_finish_flag = 1;
             fgets(data->user_string, FOO, stdin);
             data->write_finish_flag = 0;
-            while (data->read_flag1 == 0)
-                ;
+            while (data->read_flag1 == 0);
         }
     }
     data->quit_flag = 1;
