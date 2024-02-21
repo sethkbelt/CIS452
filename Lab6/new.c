@@ -28,9 +28,10 @@
 /* Structue defintions */
 struct shared_data
 {
-    int flag[2];
-    int turn;
+    int read_flag1;
+    int read_flag2;
     int quit_flag;
+    int write_finish_flag;
     char user_string[4096];
 };
 
@@ -42,7 +43,7 @@ void *reader_function(void *arg);
 int sharedData = 5;
 // char val[FOO];
 
-int main()
+int main(int argc, char *argv[])
 {
     // decide which reader you are
 
@@ -57,14 +58,28 @@ int main()
     int status;
 
     // shmget creates new shared memory and allows user to write to it
-    if ((shmId =
-             shmget(my_key, FOO,
-                    IPC_CREAT | S_IRUSR | S_IWUSR)) < 0)
+    if (argv[1] == 0)
     {
-        perror("shmget failed to get memory\n");
-        exit(1);
+        if ((shmId =
+                 shmget(my_key, FOO,
+                        IPC_CREAT | S_IRUSR | S_IWUSR)) < 0)
+        {
+            perror("shmget failed to get memory\n");
+            exit(1);
+        }
+                printf("shm id %d and  creating\n", shmId);
     }
-    printf("shmId %d\b", shmId);
+    else
+    {
+        if ((shmId =
+                 shmget(my_key, FOO,
+                        S_IRUSR | S_IWUSR)) < 0)
+        {
+            perror("shmget failed to get memory\n");
+            exit(1);
+        }
+        printf("shm id %d and not creating\n", shmId);
+    }
     // attaches the specified shared memory region
     // data is the address of the shared memory region
     if ((data = shmat(shmId, NULL, 0)) == (void *)-1)
@@ -72,13 +87,11 @@ int main()
         perror("Cannot attach to shared memory region\n");
         exit(1);
     }
-    printf("data flag\n");
-    data->flag[0] = 0;
-    data->flag[1] = 0;
-    data->turn = 0;
-    data->quit_flag = 12;
+    // data->flag[0] = 0;
+    // data->flag[1] = 0;
+    // data->turn = 0;
+    // data->quit_flag = 12;
     // data->user_string = NULL;
-    printf("post] flag\n");
 
     // create and start two threads executing the "do_greeting3" function
     // pass each thread a pointer to its respective argument
@@ -93,6 +106,7 @@ int main()
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
         exit(101);
     }
+    data->quit_flag = 0;
 
     printf("thread create up\n");
     // join with the threads(wait for them to terminate
@@ -110,7 +124,7 @@ int main()
         exit(101);
     }
 
-    printf("thread joined up");
+    printf("thread joined up and left");
     // detaches from the shared memory region
     if (shmdt(data) < 0)
     {
@@ -122,15 +136,21 @@ int main()
 
 void *reader_function(void *data2)
 {
-    printf("reader \n");
     struct shared_data *data = (struct shared_data *)data2;
-    while (1)
+    data->quit_flag = 0;
+    data->write_finish_flag = 1;
+    data->read_flag1 = 1;
+    printf("address of data: %p\n", (void *) data);
+
+    // reading the data from the shared memory region
+    while (data->quit_flag == 0)
     {
-        data->turn = 0;
-        data->flag[1] = 1;
-        while (data->flag[0] && data->turn == 0);
-        printf("%s", data->user_string); // critical section
-        data->flag[1] = 0;
+        while (data->write_finish_flag == 1)
+            ;
+        // I know I can only enter this with one reader
+        // so it's a viable solution
+        printf("Reader: %s ", data->user_string);
+        data->read_flag1 = 1;
     }
     return NULL;
 }
@@ -138,17 +158,21 @@ void *writer_function(void *data1)
 {
     printf("writer \n");
     struct shared_data *data = (struct shared_data *)data1;
+    printf("address of data: %p\n", (void *)data);
     // Set stdin to non-blocking mode
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
-
-    while (1)
+    // copying the data into the shared memory region
+    while (strcmp(data->user_string, "quit\n") != 0)
     {
-        data->turn = 1;
-        data->flag[0] = 1;
-        while (data->flag[1] && data->turn == 1);
-        fgets(data->user_string, FOO, stdin); // critical section and this is blocking too much
-        data->flag[0] = 0;
+        if (data->read_flag1 == 1)
+        {
+            printf("In Writer : ");
+            data->write_finish_flag = 1;
+            fgets(data->user_string, FOO, stdin);
+            data->write_finish_flag = 0;
+            while (data->read_flag1 == 0)
+                ;
+        }
     }
+    data->quit_flag = 1;
     return NULL;
 }
