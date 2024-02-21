@@ -23,6 +23,7 @@ struct shared_data {
     int read_flag1;
     int read_flag2;
     int quit_flag;
+    int write_finish_flag;
     char user_string[4096];
 };
 
@@ -55,13 +56,17 @@ int main (int argc, char *argv[]) {
     // reading the data from the shared memory region
     while(data->quit_flag == 0) 
     {
-        if(data->read_flag1 == 0 && which_reader == 1)
+        if(data->write_finish_flag == 0 && which_reader == 1)
             {
+                // I know I can only enter this with one reader
+                // so it's a viable solution
                 printf("%s", data->user_string);
                 data->read_flag1 = 1;
             }
-            if(data->read_flag2 == 0 && which_reader == 2)
+            if(data->write_finish_flag == 0 && which_reader == 2)
             {
+                // I know I can only enter this with one reader
+                // so it's okay
                 printf("%s", data->user_string);
                 data->read_flag2 = 1;
             }

@@ -23,6 +23,7 @@ struct shared_data {
     int read_flag1;
     int read_flag2;
     int quit_flag;
+    int write_finish_flag;
     char user_string[4096];
     // todo maybe add a quit flag
 };
@@ -55,10 +56,11 @@ int main () {
 
     // copying the data into the shared memory region
     while(strcmp(data->user_string, "quit\n") != 0) {
-        if(data->read_flag1 == 1 && data->read_flag2 ==1){
+        if(data->read_flag1 == 1 && data->read_flag2 == 1){
+        data->write_finish_flag = 1;
         fgets(data->user_string, FOO, stdin);
-        data->read_flag1 = 0;
-        data->read_flag2 = 0;
+        data->write_finish_flag = 0;
+        while(data->read_flag1 == 0 && data->read_flag2 == 0);
         }
     }
     data->quit_flag = 1;
