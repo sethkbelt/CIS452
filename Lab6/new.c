@@ -84,20 +84,20 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    printf("Data address before thread create : %p\n", (void *)data);
+    printf("Data address after shmat : %p\n", (void *)data);
     data->quit_flag = 0;
     data->write_finish_flag = 1;
     data->read_flag1 = 1;
 
     // create and start two threads executing the "do_greeting3" function
     // pass each thread a pointer to its respective argument
-    if ((status = pthread_create(&thread1, NULL, writer_function, &data)) != 0)
+    if ((status = pthread_create(&thread1, NULL, writer_function, data)) != 0)
     {
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
         exit(101);
     }
 
-    if ((status = pthread_create(&thread2, NULL, reader_function, &data)) != 0)
+    if ((status = pthread_create(&thread2, NULL, reader_function, data)) != 0)
     {
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
         exit(101);
@@ -141,8 +141,7 @@ void *reader_function(void *data2)
     // reading the data from the shared memory region
     while (data->quit_flag == 0)
     {
-        while (data->write_finish_flag == 1)
-            ;
+        while (data->write_finish_flag == 1);
         // I know I can only enter this with one reader
         // so it's a viable solution
         printf("Reader: %s ", data->user_string);

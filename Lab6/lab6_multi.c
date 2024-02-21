@@ -84,7 +84,6 @@ int main()
  ***************************************************************************/
 void *reader_function(void *arg)
 {
-
     while (quit_flag != 0)
     {
         if (flag[0] == 1)
