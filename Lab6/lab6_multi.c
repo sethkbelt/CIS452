@@ -24,7 +24,7 @@ void *reader_function(void *arg);
 // global (shared and specific) data
 int sharedData = 5;
 char val[FOO];
-int flag = 0;
+int flag[2] = {0, 0};
 int quit_flag = 1;
 
 int main()
@@ -45,7 +45,7 @@ int main()
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
         exit(1);
     }
-    
+
     if ((status = pthread_create(&thread3, NULL, reader_function, &val[1])) != 0)
     {
         fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
@@ -87,13 +87,13 @@ void *reader_function(void *arg)
 
     while (quit_flag != 0)
     {
-        if (flag == 1)
+        if (flag[0] == 1)
         {
             printf("Reader: %s", val);
-            flag = 0;
+            flag[1] = 0;
         }
     }
-        return NULL;
+    return NULL;
 }
 
 void *writer_function(void *arg)
@@ -101,10 +101,13 @@ void *writer_function(void *arg)
     while (quit_flag != 0)
     {
         // fgets is a blocking function
-        fgets(val, FOO, stdin);
-        flag = 1;
-
-        quit_flag = strcmp(val, "quit\n");
+        if (flag[1] == 0)
+        {
+            flag[0] = 0;
+            fgets(val, FOO, stdin);
+            flag[0] = 1;
+            quit_flag = strcmp(val, "quit\n");
+        }
     }
     return NULL;
 }
