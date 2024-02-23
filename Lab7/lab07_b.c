@@ -1,12 +1,14 @@
-nclude <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <semaphore.h>
 
 typedef struct {
     int arr[2];
+    sem_t mtx;
 } shared_info;
 
 int main (int argc, char*argv[]) {
@@ -17,7 +19,9 @@ int main (int argc, char*argv[]) {
     char shmName[50];
     pid_t pid;
     sprintf(shmName, "swap-%d", getuid());
-
+    sem_init(&shr->mtx,
+  1, /* Process share mode (0:for threads  non-zero:for processes */
+  1  /* initial value */);
     /*
      * TODO: get value of loop variable(from command - line
      * argument
@@ -30,26 +34,26 @@ int main (int argc, char*argv[]) {
 
     shr->arr[0] = 0;
     shr->arr[1] = 1;
-
+    int temp;
     pid = fork ();
     if (pid == 0) {
         for (i = 0; i < loop; i++) {
-        sem_wait(&mtx);
-        temp = arr[0]; // need temp variable to swap
-        arr[0] = arr[1];
-        arr[1] = temp;
-        sem_post(&mtx);
+        sem_wait(&shr->mtx);
+        temp = shr->arr[0]; // need temp variable to swap
+        shr->arr[0] = shr->arr[1];
+        shr->arr[1] = temp;
+        sem_post(&shr->mtx);
         }
         munmap (shr->arr, 2 * sizeof(long int));
         exit (0);
     }
     else {
         for (i = 0; i < loop; i++) {
-        sem_wait(&mtx);
-        temp = arr[0]; // need temp variable to swap
-        arr[0] = arr[1];
-        arr[1] = temp;
-        sem_post(&mtx);
+        sem_wait(&shr->mtx);
+        temp = shr->arr[0]; // need temp variable to swap
+        shr->arr[0] = shr->arr[1];
+        shr->arr[1] = temp;
+        sem_post(&shr->mtx);
         }
     }
 
@@ -57,5 +61,6 @@ int main (int argc, char*argv[]) {
     printf ("values: %d\t%d\n", shr->arr[0], shr->arr[1]);
     munmap (shr->arr, sizeof(shared_info));
     shm_unlink(shmName);
+    sem_destroy(&shr->mtx);
     return 0;
 }

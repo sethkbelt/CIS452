@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
     int rc;
     pthread_join(who, (void **) &rc);
     printf ("Values: %5d %5d\n", arr[0], arr[1]);
+    sem_destroy(&mtx);
+
 }
 
 void* swapper(void *arg) {
