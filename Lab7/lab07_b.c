@@ -12,13 +12,16 @@ typedef struct {
 } shared_info;
 
 int main (int argc, char*argv[]) {
+   printf("what happens");
     int status;
     long int i, loop = 0;
     shared_info *shr;
     int shmId;
     char shmName[50];
     pid_t pid;
+    printf("fails 1a");
     sprintf(shmName, "swap-%d", getuid());
+    printf("fails 1");
     sem_init(&shr->mtx,
   1, /* Process share mode (0:for threads  non-zero:for processes */
   1  /* initial value */);
@@ -27,7 +30,7 @@ int main (int argc, char*argv[]) {
      * argument
      */
     loop = atoi(argv[1]);
-
+    printf("What is going on");
     shmId = shm_open (shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     ftruncate(shmId, sizeof(shared_info));
     shr = mmap(NULL, sizeof(shared_info), PROT_READ|PROT_WRITE, MAP_SHARED, shmId, 0);
