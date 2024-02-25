@@ -25,17 +25,17 @@ typedef struct
 } shared_info;
 sem_t mtx, empty, full;
 int buffer[LIMIT_SIZE];
-int bufferSize;
-int main(int argc, char *argv[])
-{
+int bufferIndex;
 
     // stored consumer/producer information
     int buffer_size = 0, producer_sleep_time = 0, consumer_sleep_time = 0;
 
+int main(int argc, char *argv[])
+{
     // shared memory variables
     // shared_info *shr;
-    int shmId;
-    char shmName[50];
+    // int shmId;
+    // char shmName[50];
 
     // created thread
     pthread_t thread_producer, thread_consumer;
@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
     // Consumer sleep time (in milliseconds)
     consumer_sleep_time = atoi(argv[3]);
 
+    printf("Buffer size: %d Producer Sleep : %d Consumer Sleep : %d\n", buffer_size, producer_sleep_time, consumer_sleep_time);
+    
     // start shared memory initialization, 0 for threads, 1 for intialization value
     // Request (called once)
     sem_init(&mtx, 0, 1);
@@ -62,12 +64,39 @@ int main(int argc, char *argv[])
     // thread, , start routine, init value
     pthread_create(&thread_producer, NULL, producer, NULL);
     pthread_create(&thread_consumer, NULL, consumer, NULL);
-    // create threads
 
+    char user_input = '\0';
+    char input_buffer[LIMIT_SIZE];
+
+    while (1) {
+        scanf(" %c", &user_input);
+
+        switch(user_input)
+        {
+        case'a' :
+            producer_sleep_time += 250;
+        case'z' :
+            producer_sleep_time -= 250;
+            if (producer_sleep_time < 0) producer_sleep_time = 0;
+        case's' :
+            consumer_sleep_time += 250;
+        case'x' :
+            consumer_sleep_time -= 250;
+            if (consumer_sleep_time < 0) consumer_sleep_time = 0;
+        case'q' :
+            break;
+        default :
+            printf("Command: |%c| Invalid command. Please enter 'a', 'z', 's', 'x', or 'q'.\n", user_input);
+        }
+    }
     // wait for thread to be done
-    int rc_1;
+    int rc_1, rc_2;
     pthread_join(thread_producer, (void **)&rc_1);
+    pthread_join(thread_consumer, (void **)&rc_2);
+
     sem_destroy(&mtx);
+    sem_destroy(&full);
+    sem_destroy(&empty);
 }
 // The program should have three threads (not processes):
 
@@ -86,14 +115,16 @@ void *producer()
         sem_wait(&mtx);
 
         // entering critical section to add to buffer
-        buffer[bufferSize++] = random_bin;
-        printf("Producer added %d to bin %d\n", random_bin, bufferSize - 1);
+        buffer[bufferIndex++] = random_bin;
+        printf("Producer added %d to bin %d\n", random_bin, bufferIndex);
 
         sem_post(&empty);
         sem_post(&mtx);
 
-        usleep(100000); // TODO make specified time
+        usleep(producer_sleep_time * 1000); // TODO make specified time
+        if (bufferIndex == 0) break;
     }
+    return NULL;
 }
 
 void *consumer()
@@ -105,14 +136,15 @@ void *consumer()
         sem_wait(&mtx);
 
         // entering critical section to remove from buffer
-        int item_removed = buffer[--bufferSize];
-        printf("\tConsumer took away %d from bin %d\n", item_removed, bufferSize + 1);
+        int item_removed = buffer[--bufferIndex];
+        printf("\tConsumer took away %d from bin %d\n", item_removed, bufferIndex);
 
         sem_post(&mtx);
         sem_post(&empty);
 
-        usleep(100000); // TODO make specified time
+        usleep(consumer_sleep_time * 1000); // TODO make specified time
 
         /* consume the item in next consumed */
     }
+        return NULL;
 }
