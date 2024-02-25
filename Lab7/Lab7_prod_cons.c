@@ -23,9 +23,9 @@ typedef struct
     int arr[2];
     int n;
 } shared_info;
-sem_t mtx, empty, full;
+sem_t mtx, empty, full, scan_mutex;
 int buffer[LIMIT_SIZE];
-int bufferIndex;
+int bufferIndex = 1;
 
     // stored consumer/producer information
     int buffer_size = 0, producer_sleep_time = 0, consumer_sleep_time = 0;
@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     sem_init(&mtx, 0, 1);
     sem_init(&empty, 0, 0);
     sem_init(&full, 0, buffer_size);
+    sem_init(&scan_mutex, 0, 1);
 
     // create threads
     // thread, , start routine, init value
@@ -66,10 +67,10 @@ int main(int argc, char *argv[])
     pthread_create(&thread_consumer, NULL, consumer, NULL);
 
     char user_input = '\0';
-    char input_buffer[LIMIT_SIZE];
 
-    while (1) {
+    while (user_input != 'q') {
         scanf(" %c", &user_input);
+        sem_wait(&scan_mutex);
 
         switch(user_input)
         {
@@ -88,11 +89,13 @@ int main(int argc, char *argv[])
         default :
             printf("Command: |%c| Invalid command. Please enter 'a', 'z', 's', 'x', or 'q'.\n", user_input);
         }
+    sem_post(&scan_mutex);
+
     }
+    printf("SHOULD HAVE exited \n");
     // wait for thread to be done
-    int rc_1, rc_2;
-    pthread_join(thread_producer, (void **)&rc_1);
-    pthread_join(thread_consumer, (void **)&rc_2);
+    pthread_join(thread_producer, NULL);
+    pthread_join(thread_consumer, NULL);
 
     sem_destroy(&mtx);
     sem_destroy(&full);
@@ -114,15 +117,15 @@ void *producer()
         sem_wait(&empty);
         sem_wait(&mtx);
 
+        // if (bufferIndex < LIMIT_SIZE) {
         // entering critical section to add to buffer
         buffer[bufferIndex++] = random_bin;
-        printf("Producer added %d to bin %d\n", random_bin, bufferIndex);
-
-        sem_post(&empty);
+        printf("Producer added %d to bin %d\n", random_bin, bufferIndex - 1);
+        
         sem_post(&mtx);
+        sem_post(&full);
 
         usleep(producer_sleep_time * 1000); // TODO make specified time
-        if (bufferIndex == 0) break;
     }
     return NULL;
 }
@@ -143,6 +146,7 @@ void *consumer()
         sem_post(&empty);
 
         usleep(consumer_sleep_time * 1000); // TODO make specified time
+        if (bufferIndex == 0) break;
 
         /* consume the item in next consumed */
     }
