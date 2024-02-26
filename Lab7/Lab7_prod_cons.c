@@ -25,7 +25,7 @@ typedef struct
 } shared_info;
 sem_t mtx, empty, full, scan_mutex;
 int buffer[LIMIT_SIZE];
-int bufferIndex = 1;
+int bufferIndex = 0, stop_flag = 0;
 
     // stored consumer/producer information
     int buffer_size = 0, producer_sleep_time = 0, consumer_sleep_time = 0;
@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
     // start shared memory initialization, 0 for threads, 1 for intialization value
     // Request (called once)
     sem_init(&mtx, 0, 1);
-    sem_init(&empty, 0, 0);
-    sem_init(&full, 0, buffer_size);
+    sem_init(&empty, 0, buffer_size);
+    sem_init(&full, 0, 0);
     sem_init(&scan_mutex, 0, 1);
 
     // create threads
@@ -76,18 +76,24 @@ int main(int argc, char *argv[])
         {
         case'a' :
             producer_sleep_time += 250;
+            break;
         case'z' :
             producer_sleep_time -= 250;
             if (producer_sleep_time < 0) producer_sleep_time = 0;
+            break;
         case's' :
             consumer_sleep_time += 250;
+            break;
         case'x' :
             consumer_sleep_time -= 250;
             if (consumer_sleep_time < 0) consumer_sleep_time = 0;
+                        break;
         case'q' :
+            stop_flag = 1;
             break;
         default :
             printf("Command: |%c| Invalid command. Please enter 'a', 'z', 's', 'x', or 'q'.\n", user_input);
+            break;
         }
     sem_post(&scan_mutex);
 
@@ -109,7 +115,7 @@ int main(int argc, char *argv[])
 
 void *producer()
 {
-    while (1)
+    while (!stop_flag)
     {
         // random number inclusive 1000-9000
         int random_bin = rand() % 9001 + 1000;
@@ -117,7 +123,9 @@ void *producer()
         sem_wait(&empty);
         sem_wait(&mtx);
 
-        // if (bufferIndex < LIMIT_SIZE) {
+        //  if (bufferIndex >= buffer_size-1) {
+        //     bufferIndex = 0;
+        //  }
         // entering critical section to add to buffer
         buffer[bufferIndex++] = random_bin;
         printf("Producer added %d to bin %d\n", random_bin, bufferIndex - 1);
@@ -134,12 +142,14 @@ void *consumer()
 {
     while (1)
     {
-
         sem_wait(&full);
         sem_wait(&mtx);
+        int item_removed = 0;
+        if (bufferIndex > 0) {
 
         // entering critical section to remove from buffer
-        int item_removed = buffer[--bufferIndex];
+        item_removed = buffer[--bufferIndex];
+        }
         printf("\tConsumer took away %d from bin %d\n", item_removed, bufferIndex);
 
         sem_post(&mtx);
