@@ -18,25 +18,15 @@
 void *producer();
 void *consumer();
 
-typedef struct
-{
-    int arr[2];
-    int n;
-} shared_info;
 sem_t mtx, empty, full, scan_mutex;
 int buffer[LIMIT_SIZE];
-int bufferIndex = 0, stop_flag = 0;
+int bufferIndexConsumer = 0, bufferIndexProducer = 0, stop_flag = 0, shared_counter = 0;
 
-    // stored consumer/producer information
-    int buffer_size = 0, producer_sleep_time = 0, consumer_sleep_time = 0;
+// stored consumer/producer information
+int buffer_size = 0, producer_sleep_time = 0, consumer_sleep_time = 0;
 
 int main(int argc, char *argv[])
 {
-    // shared memory variables
-    // shared_info *shr;
-    // int shmId;
-    // char shmName[50];
-
     // created thread
     pthread_t thread_producer, thread_consumer;
 
@@ -98,11 +88,10 @@ int main(int argc, char *argv[])
     sem_post(&scan_mutex);
 
     }
-    printf("SHOULD HAVE exited \n");
     // wait for thread to be done
     pthread_join(thread_producer, NULL);
     pthread_join(thread_consumer, NULL);
-
+    printf("You have succesfully exited");
     sem_destroy(&mtx);
     sem_destroy(&full);
     sem_destroy(&empty);
@@ -123,16 +112,15 @@ void *producer()
         sem_wait(&empty);
         sem_wait(&mtx);
 
-        //  if (bufferIndex >= buffer_size-1) {
-        //     bufferIndex = 0;
-        //  }
+
         // entering critical section to add to buffer
-        buffer[bufferIndex++] = random_bin;
-        printf("Producer added %d to bin %d\n", random_bin, bufferIndex - 1);
-        
+        buffer[bufferIndexProducer] = random_bin;
+        printf("Producer added %d to bin %d\n", random_bin, bufferIndexProducer);
+        bufferIndexProducer = (bufferIndexProducer + 1) % buffer_size;
+        shared_counter++;
+
         sem_post(&mtx);
         sem_post(&full);
-
         usleep(producer_sleep_time * 1000); // TODO make specified time
     }
     return NULL;
@@ -145,18 +133,18 @@ void *consumer()
         sem_wait(&full);
         sem_wait(&mtx);
         int item_removed = 0;
-        if (bufferIndex > 0) {
-
+        if (shared_counter > 0) {
         // entering critical section to remove from buffer
-        item_removed = buffer[--bufferIndex];
+        item_removed = buffer[bufferIndexConsumer];
+        printf("\tConsumer took away %d from bin %d\n", item_removed, bufferIndexConsumer);
+        bufferIndexConsumer = (bufferIndexConsumer + 1) % buffer_size;
+        shared_counter--;
         }
-        printf("\tConsumer took away %d from bin %d\n", item_removed, bufferIndex);
-
         sem_post(&mtx);
         sem_post(&empty);
 
         usleep(consumer_sleep_time * 1000); // TODO make specified time
-        if (bufferIndex == 0) break;
+        if (bufferIndexConsumer == 0 && stop_flag == 1) break;
 
         /* consume the item in next consumed */
     }
