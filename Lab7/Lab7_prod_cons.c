@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     while (user_input != 'q') {
         scanf(" %c", &user_input);
-        sem_wait(&scan_mutex);
+        sem_wait(&mtx);
 
         switch(user_input)
         {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
             printf("Command: |%c| Invalid command. Please enter 'a', 'z', 's', 'x', or 'q'.\n", user_input);
             break;
         }
-    sem_post(&scan_mutex);
+    sem_post(&mtx);
 
     }
     // wait for thread to be done
