@@ -11,7 +11,7 @@ typedef struct {
     sem_t mtx;
 } shared_info;
 
-int main (int argc, char*argv[]) {
+int main (int argc, char * argv[]) {
    printf("what happens");
     int status;
     long int i, loop = 0;
