@@ -45,13 +45,13 @@ int main() {
     printf("%p Address of global_uninitialized_var (Unitialized Data) \n", &global_uninitialized_var);
     printf("%p Address of global_uninitialized_var_char (Unitialized Data) \n", &global_uninitialized_var_char);
     printf("%p Address of global_uninitialized_var_array (Unitialized Data) \n", &global_uninitialized_var_array);
-    printf("%p Address of local_var (Run time Stack Space) \n", &local_var_initialized);
-    printf("%p Address of heap_var (Run Time Heap Space)\n", heap_var);
-    printf("%p Address of heap_var_char (Run Time Heap Space)\n", heap_var_char);
-    printf("%p Address of heap_float (Run Time Heap Space)\n", heap_float);
+    printf("%p Address of local_var (Run time Stack Space.) \n", &local_var_initialized);
+    printf("%p Address of heap_var (Run Time Heap Space. Created first.)\n", heap_var);
+    printf("%p Address of heap_var_char (Run Time Heap Space. Created Second.)\n", heap_var_char);
+    printf("%p Address of heap_float (Run Time Heap Space. Created Third.)\n", heap_float);
     printf("%p Address of local_var_uninitialized (Run time Stack Space) \n", &local_var_uninitialized);
     printf("%p Address of array_init (Run time Stack Space) \n", &array_init);
-    printf("%p Address of array_unit (Run time Stack Space) \n", &array_unit);
+    printf("%p Address of array_unit (Run time Stack Space. Created first.) \n", &array_unit);
 
 
 
@@ -88,6 +88,6 @@ void func2(int x) {
 void func3(int *x) {
     char func2_var = 'x';
     printf("%p Address of func3_var (Run time Stack Space) \n", &func2_var);
-    printf("%p Address of funct3 parameter (Run time Stack Space)\n", &x);
+    printf("%p Address of funct3 parameter (Run time Stack Space. Created Last.)\n", &x);
 
 }
