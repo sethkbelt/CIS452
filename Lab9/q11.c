@@ -1,18 +1,24 @@
+/****************************************************************************
+ * Title: q11.c
+ * Author: Seth Konynenbelt
+ * Created: March 20, 2024
+ * Description: This is showing how memory is initialized
+ ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Global variables
+// Global variables initialized
 int global_initialized_var = 5; // global initialized
 char global_initialized_var_char = 'x'; // global initialized
 char global_initialized_var_array[3] = {'x', 'x', 'x'}; // global initialized
 
+// Global variables un-itialized
 int global_uninitialized_var; // global uninitialized
 char global_uninitialized_var_char; // global initialized
 char global_uninitialized_var_array[3]; // global initialized
 
-
-// (local, initialized, uninitialized, arrays, pointers, etc.)
 // Function declarations
 void func1();
 void func2(int x);
@@ -23,6 +29,7 @@ int main() {
     int local_var_initialized = 10;
     int local_var_uninitialized;
 
+    // heap variables
     int *heap_var = malloc(sizeof(int)); // heap variable
     *heap_var = 15;
 
@@ -34,6 +41,7 @@ int main() {
     heap_float = (float*)malloc(n * sizeof(float));
 
 
+    // array initializations
     char array_unit[10];
     int array_init[3] = {1,2,3};
 
@@ -64,6 +72,7 @@ int main() {
     return 0;
 }
 
+// function one with initializations in the function, calls function to
 void func1() {
     int *heap_var_f = malloc(sizeof(int)); // heap variable
     memset(heap_var_f, 0, sizeof(int)); 
@@ -74,6 +83,7 @@ void func1() {
     free(heap_var_f);
 }
 
+// function two gets called from function 1
 void func2(int x) {
     int func2_var = 25;
     printf("%p Address of func2_var (Run time Stack Space) \n", &func2_var);
@@ -85,6 +95,7 @@ void func2(int x) {
     func3(&x);
 }
 
+// third function to print memory with a pointer parameter
 void func3(int *x) {
     char func2_var = 'x';
     printf("%p Address of func3_var (Run time Stack Space) \n", &func2_var);
